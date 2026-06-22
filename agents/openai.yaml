@@ -1,0 +1,4 @@
+interface:
+  display_name: "Read VRC Unity Project"
+  short_description: "Inspect VRC avatar projects safely and accurately"
+  default_prompt: "Use $read-vrc-unity-project to inspect this VRC Unity project and report its avatar structure and configuration."

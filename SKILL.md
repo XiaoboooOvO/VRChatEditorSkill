@@ -128,6 +128,14 @@ Use the selected tool route only when its `TOOLCHAIN_PROFILE` entry is confirmed
   [references/extended-tool-support.md](references/extended-tool-support.md).
 - Any other provider: read [references/generic-provider.md](references/generic-provider.md).
 
+For FaceEmo, lilycalInventory, or Modular Avatar work, use the selected playbook
+as an execution checklist rather than a background description. Build its source
+and ownership record before mutation, follow the task-specific diagnostic order,
+edit only the identified stable source, and satisfy the playbook's acceptance
+matrix before reporting success. If the installed version lacks an expected
+component or field, stop and resolve the version's supported equivalent instead
+of inventing or copying a schema.
+
 ## Trace Unity serialization narrowly
 
 - Search `.unity`, `.prefab`, `.asset`, `.controller`, `.overrideController`, `.anim`, `.mat`, `.meta`, and task-relevant importer files.

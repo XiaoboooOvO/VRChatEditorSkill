@@ -1,96 +1,200 @@
 ---
-name: read-vrc-unity-project
-description: Inspect and explain VRC SDK Unity avatar projects by combining static Unity serialization and GUID indexing, Unity Editor batch-mode inspection, and optional NDMF or Modular Avatar build-output verification. Use when Codex needs to locate avatar scenes or descriptors, trace GUID and fileID references, inspect hierarchies, components, expression menus, parameters, Animator layers, PhysBones, Contacts, materials, or Modular Avatar configuration, diagnose avatar behavior, or distinguish source-scene state from the avatar produced for VRChat.
+name: inspect-vrchat-avatar-project
+description: Inspect, diagnose, document, and explain VRChat Avatar SDK Unity projects with a toolchain-confirmation gate, player-menu-first baseline audit, durable project documentation, and evidence-led scope control across serialized source assets, Unity-resolved state, provider or NDMF output, SDK builds, and runtime validation. Use only for VRChat Avatar work when Codex receives a new avatar, must confirm expression, clothing, prop, preview, or optimization tools, trace a player-visible feature, inspect parameters, Animator layers, FaceEmo, lilycalInventory, Modular Avatar, DressingTools, Gesture Manager, Avatar Optimizer, PhysBones, Contacts, materials, textures, meshes, prefab overrides, build size, or maintain the audit after a relevant change. Do not use for VRChat World or Udon projects.
 ---
 
-# Read VRC Unity Project
+# Inspect VRChat Avatar Project
 
-Read the project in three layers: static files for fast discovery, Unity APIs for resolved object state, and the build pipeline for final generated state.
+Inspect the smallest authoritative scope and label every conclusion by evidence layer. Treat project-local coordination documents and inventories as routing indexes, not as timeless proof.
 
-## Preserve the project
+Apply this workflow only to VRChat Avatars. Route VRChat Worlds, Udon, world scenes, and world runtime systems to a dedicated World workflow instead.
 
-- Treat read, inspect, explain, review, and diagnose requests as read-only. Do not save scenes, prefabs, assets, or generated controllers unless the user asks for a change.
-- Check workspace status and existing user changes before creating inspection files. Never revert unrelated work.
-- Treat `Assets/`, `Packages/`, and `ProjectSettings/` as project sources. Treat `Library/`, `Temp/`, `Logs/`, `Obj/`, and generated `.csproj` files as caches or diagnostics, not source of truth.
-- Put reports under `Temp/CodexReports/` by default. Do not place generated reports under `Assets/`.
-- Do not upload an avatar or invoke a VRChat SDK publish action during inspection.
+## Preserve intent and existing work
 
-## Establish the baseline
+- Treat inspect, explain, review, audit, compare, and diagnose requests as read-only. Do not implement a fix unless the user asks for a change.
+- Do not save scenes or prefabs, Apply overrides, refresh/import assets, enter Play Mode, build, upload, or publish unless the request authorizes that action.
+- Inspect workspace status before changes. Preserve unrelated work and do not assume Git recovery exists.
+- Keep upload as a separate authorization boundary. Permission to inspect, preview, test, or build does not imply permission to upload.
+- For feature imports and visual-asset updates, record source footprint and the current size-evidence status. Run fresh SDK size reports, probe new build caches, or initiate size builds only when size/build validation is explicitly authorized.
 
-1. Confirm the directory contains `Assets/`, `Packages/`, and `ProjectSettings/`.
-2. Read `ProjectSettings/ProjectVersion.txt` and use the exact Unity editor version.
-3. Read `Packages/manifest.json`, `Packages/packages-lock.json`, and `Packages/vpm-manifest.json` when present.
-4. Record the VRC SDK, Modular Avatar, NDMF, Avatar Optimizer, VRCFury, shader, and other build-affecting package versions.
-5. Enumerate every `.unity` file under `Assets/`. Do not assume `EditorBuildSettings.asset` identifies the avatar scene; avatar projects commonly leave its scene list empty.
-6. Locate likely avatar scenes by searching for `VRCAvatarDescriptor` serialization, `customExpressions`, `expressionParameters`, `baseAnimationLayers`, and known avatar root names.
+## Orient from project-local knowledge
 
-## Read static Unity serialization
+1. Find and read applicable `AGENTS.md` files and the project's documented entrypoint, such as `PROJECT_CONTEXT.md`.
+2. Reuse task-relevant maintained-avatar inventories, menu maps, expression guides, parameter reports, and size guides when present.
+3. Treat dated inventories as navigation. Cheaply recheck facts that can drift: Unity version, package versions, exact editor instance, active scene, target root, dirty/compile/play state, and relevant asset references.
+4. Honor documented inactive, historical, generated, recovery, or out-of-scope boundaries.
+5. Rescan broadly only when no usable inventory exists or a documented refresh trigger applies.
 
-Use fast text inspection first for targeted questions.
+Do not encode project-specific avatar names, GUIDs, package versions, or grouping assumptions into this reusable workflow.
 
-- Search `.unity`, `.prefab`, `.asset`, `.controller`, `.overrideController`, `.anim`, `.mat`, and `.meta` files.
-- Trace an external reference by copying its `guid`, finding the `.meta` file containing that GUID, and then opening the adjacent asset.
-- Interpret `fileID` as the object or sub-asset identity inside the referenced file. Preserve both GUID and fileID when reporting evidence.
-- Follow scene-local links through Unity document anchors such as `--- !u!1 &12345` and references such as `{fileID: 12345}`.
-- Inspect Prefab Instance modifications and removed or added components before concluding that a source prefab matches its scene instance.
-- Use exact object paths when possible. Names are not unique, and inactive duplicates are common.
-- Do not feed the complete project to a generic YAML parser. Unity serialization uses tagged multi-document YAML, large integer anchors, prefab overrides, and engine-specific object references.
+## Confirm the toolchain first
 
-Static inspection is sufficient for locating assets, checking literal values, tracing references, and narrowing the semantic inspection target.
+Unity MCP is required for every Editor-resolved query and every Unity-managed
+action in this workflow. Before a complete baseline audit, confirm that the MCP
+toolset is available and that an exact instance can be associated with the
+target project. Static package and source detection may proceed without MCP,
+but it cannot complete the menu-to-model audit or authorize Editor work.
 
-## Escalate to Unity semantic inspection
+Before a new Avatar baseline audit, read or create the project's
+`TOOLCHAIN_PROFILE`. Detect installed packages and the target Avatar's actual
+provider components without importing anything, then let the user confirm the
+tool roles before the menu audit or any mutation.
 
-Use Unity Editor APIs when the answer depends on resolved prefab instances, imported models, component types, private serialized fields, inactive objects, Animator sub-assets, or exact object hierarchy.
+Recommend this default profile when compatible:
 
-Read [references/unity-editor-inspection.md](references/unity-editor-inspection.md) before writing or running an inspector.
+- clothing and wardrobe: lilycalInventory;
+- facial expressions: FaceEmo;
+- props and reusable feature prefabs: the asset-declared provider, otherwise
+  Modular Avatar;
+- Unity preview: Gesture Manager only when requested;
+- optimization: Avatar Optimizer only when requested or required by a measured
+  target.
 
-Follow these rules:
+Support an existing DressingTools workflow without forcing migration. Treat an
+unknown or asset-specific plugin through the generic provider route rather than
+inventing specialized experience.
 
-1. Locate the Unity executable matching `ProjectVersion.txt`; do not silently use a different version.
-2. Ensure no other Unity process has the same project open, or inspect a deliberate copy. Unity normally permits one editor process per project.
-3. Create a uniquely named temporary editor script under `Assets/Editor/`. Do not overwrite an existing file.
-4. Launch Unity once in batch mode to import and compile the script.
-5. Launch Unity a second time with `-executeMethod` to run it. A newly added method is not reliably available in the same launch that first imports it.
-6. Open the intended scene explicitly with `EditorSceneManager.OpenScene`.
-7. Include inactive objects with `GetComponentsInChildren<T>(true)`.
-8. Report full hierarchy paths, active state, component type, asset path, GUID, and relevant values.
-9. Use `AssetDatabase.GetAssetPath` for object references and `SerializedObject` for targeted serialized fields not exposed by a stable public API.
-10. Emit a machine-readable JSON report plus a unique completion marker. Treat arbitrary `Error` text in Unity package or licensing logs as diagnostic noise unless the process exit code, compilation status, or completion marker also indicates failure.
-11. Do not call `SaveScene`, `SaveAssets`, or prefab save APIs during a read-only inspection.
-12. Remove a temporary inspector only after all Unity processes have exited. Remove its `.meta` with it and allow a final refresh; otherwise stale compilation state can reference a deleted source file.
+User selection and package presence are separate facts. Load a tool-specific
+playbook only when the user selected that role and the exact tool is installed.
+If the user selects a missing tool, stop before import until installation is
+explicitly authorized. Read [references/toolchain-selection.md](references/toolchain-selection.md)
+for the selection record and reuse rules.
 
-## Distinguish source state from built state
+## Maintain a durable audit index
 
-Check the installed packages before interpreting the raw scene.
+For a newly received avatar, perform a read-only baseline audit and create or update project-owned documentation before proposing changes. Start from the player menu and trace each reachable function to its parameter, provider, controller or driver, exact model binding, and source files. Record passive systems separately; do not invent menu entries for PhysBones, automatic Contacts, or internal generator parameters.
 
-- Treat Modular Avatar, NDMF plugins, Avatar Optimizer, VRCFury, and similar systems as build-time transformations.
-- Describe raw-scene findings as source configuration, not as the guaranteed uploaded avatar.
-- When the question asks whether a menu, parameter, Animator, mesh, or component exists in the final avatar, run the installed version's supported preview or build pipeline and inspect the generated clone or build artifact.
-- Keep preview and upload separate. Never infer permission to publish from permission to inspect.
-- State clearly whether each conclusion comes from static source, Unity-resolved source state, or generated build state.
+Maintain documentation that covers:
 
-## Inspection checklist
+- the confirmed toolchain profile and installed-provider evidence;
+- exact avatar identity, versions, shared consumers, and evidence status;
+- the complete player menu tree and menu-to-function chains;
+- parameters in both directions: menu to parameter to consumer, and parameter back to owner and menu;
+- one provider inventory record per plugin or project-owned feature;
+- renderer, material, shader-property, texture, importer, animation-binding, and shared-consumer routes for visual assets;
+- size evidence, including whether only source footprint or an exact SDK build is available.
 
-Inspect only the categories relevant to the request:
+Treat these documents as dated routing indexes. At the end of every relevant change, refresh the affected records and mark stale or unrun evidence explicitly. Read [references/audit-documentation-workflow.md](references/audit-documentation-workflow.md) for the required audit, menu architecture, change-delta, and update contracts.
 
-- Avatar Descriptor and avatar root
-- Expression Menu and Expression Parameters
-- Base and special animation layers, controllers, states, transitions, and parameter drivers
-- Modular Avatar menu installers, menu items, object toggles, bone proxies, merge components, and parameter components
-- PhysBones, colliders, Contacts, stations, and constraints
-- Skinned meshes, blendshapes, materials, shaders, and missing references
-- Active state, transforms, duplicate names, missing scripts, and prefab overrides
-- NDMF or optimizer changes when final behavior matters
+## Lock the target before deep inspection
 
-## Report the result
+Record the exact:
 
-Lead with the answer, then provide:
+- project path and Unity version;
+- exact selected Unity MCP instance;
+- active scene and whether it is saved or dirty;
+- avatar hierarchy path, including whitespace and duplicate-name risks;
+- requested feature or failure;
+- intended evidence level and whether any mutation is authorized.
 
-- Unity and VRC SDK versions
-- Scene and avatar root inspected
-- Evidence paths and GUID resolutions
-- Whether the finding is static, Unity-resolved, or build-resolved
-- Unresolved references, compilation failures, or version mismatches
-- The smallest safe next step when more certainty is required
+Do not infer the target from object recency, active state, a Pipeline Manager ID, structural similarity, or a previous session's editor instance.
 
-Do not claim final VRChat behavior from raw YAML alone when a build-time system participates.
+## Use the evidence ladder
+
+Classify findings with one of these labels:
+
+1. `STATIC_SOURCE` - serialized files, GUID/fileID chains, literal values, and package metadata.
+2. `UNITY_RESOLVED` - imported assets, prefab instances, component types, private serialized fields, and resolved hierarchy observed through the selected Unity MCP instance.
+3. `PROVIDER_PREVIEW` - a tool's source/provider preview or introspection, before final transformation.
+4. `NDMF_BUILT` - the generated avatar after NDMF, Modular Avatar, FaceEmo, Avatar Optimizer, or equivalent build passes.
+5. `SDK_BUILD` - VRChat SDK validation and the exact built bundle or parameter result.
+6. `CLIENT_RUNTIME` - behavior observed in Gesture Manager, Play Mode, Build & Test, desktop, VR, or multiplayer. Name the exact runtime layer.
+7. `UPLOAD_CONFIRMED` - the explicitly authorized uploaded avatar and its observed result.
+
+Read [references/evidence-and-authorization.md](references/evidence-and-authorization.md) whenever the requested conclusion may require preview, build, runtime, size, or upload evidence.
+
+Never promote one layer into another. In particular, do not describe raw YAML, provider previews, or an old build cache as final player behavior.
+
+## Route from the user's question
+
+Choose the narrowest relevant route:
+
+- Player-visible menu or feature: start at the complete player menu path, then follow control and value to parameter, provider/controller, state or clip, exact model binding, and built menu when final reachability matters.
+- Facial expression or gesture: trace the editable source, generated ownership, Blink/Lip Sync/eye tracking interaction, and final merged FX behavior.
+- Parameter addition, removal, or conflict: use installed SDK or provider APIs; calculate each target avatar independently and inspect type/default/sync conflicts.
+- Clothing, accessory, or generated feature: identify the real provider chain and every responsibility it contributes, including menu, parameters, armature, mesh, blendshape, and object toggles.
+- PhysBone or Contact: inspect exact transforms, roots, colliders, senders/receivers, allow-self/others settings, parameters, and runtime-dependent behavior.
+- Material, texture, animation, or mesh: trace renderer path, material slot, material, shader property, texture/importer or clip binding, full GUID/fileID lineage, shared consumers, and platform import settings.
+- Size or upload readiness: require explicit size-check authorization, distinguish compressed download size from uncompressed AssetBundle size, and associate results with one exact target and build.
+
+Read [references/avatar-feature-routing.md](references/avatar-feature-routing.md) for the detailed route and stop conditions.
+
+Use the selected tool route only when its `TOOLCHAIN_PROFILE` entry is confirmed:
+
+- FaceEmo: read [references/faceemo-playbook.md](references/faceemo-playbook.md).
+- lilycalInventory: read [references/lilycal-inventory-playbook.md](references/lilycal-inventory-playbook.md).
+- Modular Avatar: read [references/modular-avatar-playbook.md](references/modular-avatar-playbook.md).
+- DressingTools, Gesture Manager, or Avatar Optimizer: read
+  [references/extended-tool-support.md](references/extended-tool-support.md).
+- Any other provider: read [references/generic-provider.md](references/generic-provider.md).
+
+## Trace Unity serialization narrowly
+
+- Search `.unity`, `.prefab`, `.asset`, `.controller`, `.overrideController`, `.anim`, `.mat`, `.meta`, and task-relevant importer files.
+- Resolve external references through both GUID and fileID. Resolve scene-local references through document anchors and prefab modifications.
+- Include Prefab Instance overrides, removed components, added components, inactive objects, and duplicate names before concluding that a source prefab matches the scene instance.
+- Do not feed the whole project to a generic YAML parser. Unity serialization uses tagged multi-document YAML, large anchors, prefab overrides, and engine-specific sub-assets.
+- Treat `Library/`, `Temp/`, `Logs/`, `Obj/`, generated project files, previews, and caches as diagnostics unless the installed tool explicitly defines a particular artifact as evidence.
+
+Static inspection is for routing and literal facts. Escalate when the answer depends on resolved or generated state.
+
+## Require Unity MCP for Editor work
+
+Before any Unity-resolved inspection, preview, import, refresh, scene or prefab
+change, compilation, test, build, or upload:
+
+1. Confirm that the Unity MCP server and required tools are callable.
+2. Rediscover available instances; do not reuse an old instance identifier.
+3. Select the exact project instance and prove its project path and Unity version.
+4. Read editor state, active scene, dirty state, Play Mode, compilation/update state, and Console baseline before action.
+5. Keep one owner for scene, prefab, import, compile, preview, test, build, and upload operations.
+6. Stop and report if the selected instance, project, target, or scene cannot be proven.
+
+If no usable Unity MCP connection exists, continue only with claims that static
+source evidence can support. Mark Editor-dependent work `MCP_REQUIRED` or
+`BLOCKED` and ask the user to connect the correct instance. This skill does not
+use batch-mode Unity or a temporary Editor script as a silent substitute for
+MCP. Read [references/unity-mcp-inspection.md](references/unity-mcp-inspection.md)
+for the connection, ownership, retry, and evidence requirements.
+
+## Respect shared and generated ownership
+
+Before a change, classify the target as one of:
+
+- scene-instance override;
+- shared prefab, material, menu, parameters, controller, animation, or model asset;
+- tool-owned editable source configuration;
+- generated output;
+- build clone or cache.
+
+Map all known consumers before modifying shared assets. Do not edit timestamped or tool-owned generated output unless the tool explicitly documents it as the supported source of truth. Apply, regeneration, and build operations can affect more avatars than the selected scene object.
+
+Read [references/generated-and-shared-assets.md](references/generated-and-shared-assets.md) when FaceEmo, Modular Avatar, lilycalInventory, DressingTools, Avatar Optimizer, or another generator participates.
+
+## Validate in proportion to the claim
+
+- For a literal serialized change, use static diff plus Unity import/compile when import occurred.
+- For a resolved component or prefab claim, use the selected Unity MCP instance.
+- For merged menus, parameters, Animator layers, optimized meshes, or generated components, inspect the NDMF/provider build output.
+- For visual, audio, gesture, Contact, PhysBone, Blink, Lip Sync, eye tracking, or synchronization behavior, run the exact authorized runtime layer.
+- For parameter limits, prefer SDK/provider APIs over hand arithmetic. Keep source estimates separate from final built cost.
+- For bundle limits, use the exact current build. Do not infer size from scenes, FBX files, textures, or a structurally similar avatar.
+- Treat values close to a hard platform limit as ordinary within-limit results. Do not prompt for optimization unless a hard limit is exceeded or the user explicitly requests optimization.
+- Preserve provider ownership during menu work. Do not merge or interleave different plugins' menu leaves as an optimization strategy.
+- Do not call an unrun layer `PASS`. Report it as `NOT_RUN`, `BLOCKED`, or `BUILD_REQUIRED`.
+
+## Report compact evidence
+
+Lead with the answer, then include:
+
+- exact project, scene, and avatar root;
+- affected feature and ownership boundary;
+- evidence label for every material conclusion;
+- key asset paths and GUID/fileID resolutions;
+- live-state checks or build/runtime layer actually run;
+- shared consumers and generated-source boundary;
+- unresolved risks, unrelated pre-existing errors, and unrun layers;
+- audit documents created or refreshed, and any affected record intentionally left unchanged;
+- smallest safe next step.
+
+Keep unrelated Console errors separate from task-caused failures. A process exit code alone is insufficient when a tool requires a completion marker or output artifact.

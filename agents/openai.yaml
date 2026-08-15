@@ -1,4 +1,4 @@
 interface:
-  display_name: "Read VRC Unity Project"
-  short_description: "Inspect VRC avatar projects safely and accurately"
-  default_prompt: "Use $read-vrc-unity-project to inspect this VRC Unity project and report its avatar structure and configuration."
+  display_name: "Inspect VRChat Avatar Project"
+  short_description: "Confirm tools and audit VRChat Avatars"
+  default_prompt: "Use $inspect-vrchat-avatar-project with the exact Unity MCP instance to confirm this Avatar's toolchain, audit its complete player menu, and create evidence-labeled project documentation."
